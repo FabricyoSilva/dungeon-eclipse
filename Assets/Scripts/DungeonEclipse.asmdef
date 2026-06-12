@@ -1,0 +1,9 @@
+{
+    "name": "DungeonEclipse",
+    "rootNamespace": "DungeonEclipse",
+    "references": ["UnityEngine.UI"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "autoReferenced": true
+}
