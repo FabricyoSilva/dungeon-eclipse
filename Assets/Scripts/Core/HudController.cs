@@ -14,6 +14,7 @@ namespace DungeonEclipse.Core
         private Image _healthFill;
         private Text _message;
         private GameObject _victoryPanel;
+        private GameObject _defeatPanel;
         private Health _health;
         private float _messageTimer;
 
@@ -29,14 +30,20 @@ namespace DungeonEclipse.Core
         private void Start()
         {
             if (GameManager.Instance != null)
+            {
                 GameManager.Instance.OnVictory += ShowVictory;
+                GameManager.Instance.OnDefeat += ShowDefeat;
+            }
         }
 
         private void OnDestroy()
         {
             Messages.OnMessage -= ShowMessage;
             if (GameManager.Instance != null)
+            {
                 GameManager.Instance.OnVictory -= ShowVictory;
+                GameManager.Instance.OnDefeat -= ShowDefeat;
+            }
         }
 
         public void Bind(Health health)
@@ -62,6 +69,8 @@ namespace DungeonEclipse.Core
         }
 
         private void ShowVictory() => _victoryPanel.SetActive(true);
+
+        private void ShowDefeat() => _defeatPanel.SetActive(true);
 
         private void UpdateBar(int current, int max)
         {
@@ -134,6 +143,41 @@ namespace DungeonEclipse.Core
             bt.offsetMin = Vector2.zero; bt.offsetMax = Vector2.zero;
 
             _victoryPanel.SetActive(false);
+
+            // Painel de derrota (gêmeo do de vitória)
+            _defeatPanel = new GameObject("DefeatPanel");
+            _defeatPanel.transform.SetParent(canvasGo.transform, false);
+            var dpImg = _defeatPanel.AddComponent<Image>();
+            dpImg.color = new Color(0.15f, 0f, 0f, 0.8f);
+            var dt = dpImg.rectTransform;
+            dt.anchorMin = Vector2.zero; dt.anchorMax = Vector2.one;
+            dt.offsetMin = Vector2.zero; dt.offsetMax = Vector2.zero;
+
+            var loseText = CreateText("LoseText", _defeatPanel.transform,
+                "Tente Novamente", 56, TextAnchor.MiddleCenter);
+            Anchor(loseText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(0, 60), new Vector2(800, 100));
+            loseText.color = new Color(1f, 0.5f, 0.4f);
+
+            var dBtnGo = new GameObject("RestartButton");
+            dBtnGo.transform.SetParent(_defeatPanel.transform, false);
+            var dBtnImg = dBtnGo.AddComponent<Image>();
+            dBtnImg.color = new Color(0.9f, 0.4f, 0.3f);
+            var dBtn = dBtnGo.AddComponent<Button>();
+            dBtn.targetGraphic = dBtnImg;
+            dBtn.onClick.AddListener(() =>
+            {
+                if (GameManager.Instance != null) GameManager.Instance.Reiniciar();
+            });
+            Anchor(dBtnImg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(0, -50), new Vector2(220, 60));
+            var dBtnText = CreateText("Text", dBtnGo.transform, "Reiniciar", 28, TextAnchor.MiddleCenter);
+            dBtnText.color = Color.black;
+            var dbt = dBtnText.rectTransform;
+            dbt.anchorMin = Vector2.zero; dbt.anchorMax = Vector2.one;
+            dbt.offsetMin = Vector2.zero; dbt.offsetMax = Vector2.zero;
+
+            _defeatPanel.SetActive(false);
         }
 
         private static void EnsureEventSystem()
