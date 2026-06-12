@@ -65,3 +65,6 @@ crashlytics-build.properties
 
 # AI assistant artifacts
 .claude/
+
+# Superpowers specs/plans — design docs, not committed
+/docs/superpowers/
