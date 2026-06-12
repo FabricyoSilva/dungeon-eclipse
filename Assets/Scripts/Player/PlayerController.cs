@@ -8,11 +8,13 @@ namespace DungeonEclipse.Player
 {
     /// <summary>
     /// Controla o Kael: lê input de movimento (passo a passo na grade) e a ação
-    /// de destruir um cristal numa célula adjacente.
+    /// de destruir um cristal ou atacar um guardião numa célula adjacente.
     /// </summary>
     [RequireComponent(typeof(GridMover))]
     public class PlayerController : MonoBehaviour
     {
+        [SerializeField] private int attackDamage = 1;
+
         public Health Health { get; private set; }
         public GridMover Mover { get; private set; }
 
@@ -24,6 +26,12 @@ namespace DungeonEclipse.Player
             Mover = GetComponent<GridMover>();
             Mover.Init(board, startCell);
             Health = new Health(maxHp);
+            Health.OnDied += HandleDeath;
+        }
+
+        private void HandleDeath()
+        {
+            if (GameManager.Instance != null) GameManager.Instance.Derrota();
         }
 
         private void Update()
@@ -51,11 +59,21 @@ namespace DungeonEclipse.Player
             if (!Input.GetKeyDown(KeyCode.Space) && !Input.GetKeyDown(KeyCode.E)) return;
             foreach (var d in Directions)
             {
-                var crystal = FindCrystalAt(Mover.Cell + d);
+                var cell = Mover.Cell + d;
+
+                var crystal = FindCrystalAt(cell);
                 if (crystal != null)
                 {
                     crystal.DestroyCrystal();
                     Messages.Raise("Cristal Destruído");
+                    return;
+                }
+
+                var guardian = FindGuardianAt(cell);
+                if (guardian != null)
+                {
+                    bool defeated = guardian.Engage(Health, attackDamage);
+                    Messages.Raise(defeated ? "Guardião Derrotado" : "Atingiu o Guardião");
                     return;
                 }
             }
@@ -65,6 +83,13 @@ namespace DungeonEclipse.Player
         {
             foreach (var c in FindObjectsOfType<Crystal>())
                 if (!c.Destroyed && c.Cell == cell) return c;
+            return null;
+        }
+
+        private Guardian FindGuardianAt(Vector2Int cell)
+        {
+            foreach (var g in FindObjectsOfType<Guardian>())
+                if (!g.Defeated && g.Cell == cell) return g;
             return null;
         }
     }
