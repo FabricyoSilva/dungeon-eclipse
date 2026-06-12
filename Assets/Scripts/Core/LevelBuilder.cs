@@ -19,6 +19,7 @@ namespace DungeonEclipse.Core
         [Header("Posições na grade")]
         [SerializeField] private Vector2Int startCell = new Vector2Int(1, 1);
         [SerializeField] private Vector2Int crystalCell = new Vector2Int(4, 1);
+        [SerializeField] private Vector2Int guardianCell = new Vector2Int(7, 3);
         [SerializeField] private Vector2Int goalCell = new Vector2Int(7, 5);
         [SerializeField] private int playerHp = 5;
 
@@ -46,6 +47,14 @@ namespace DungeonEclipse.Core
             csr.color = new Color(0.5f, 0.2f, 0.7f);
             csr.sortingOrder = 4;
             crystalGo.AddComponent<Crystal>().Init(board, crystalCell);
+
+            // Guardião (vermelho) — bloqueia a subida até o alvo
+            var guardianGo = new GameObject("Guardian");
+            var gdsr = guardianGo.AddComponent<SpriteRenderer>();
+            gdsr.sprite = PlaceholderSprite.Square;
+            gdsr.color = new Color(0.8f, 0.2f, 0.2f);
+            gdsr.sortingOrder = 4;
+            guardianGo.AddComponent<Guardian>().Init(board, guardianCell);
 
             // Sala-alvo
             var goalGo = new GameObject("Goal");
