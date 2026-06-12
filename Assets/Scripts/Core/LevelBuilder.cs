@@ -23,6 +23,10 @@ namespace DungeonEclipse.Core
         [SerializeField] private Vector2Int goalCell = new Vector2Int(7, 5);
         [SerializeField] private int playerHp = 5;
 
+        [Header("Progressão")]
+        [SerializeField] private bool spawnGuardian = false;
+        [SerializeField] private string nextScene = ""; // vazio = sala final (vitória)
+
         private void Start()
         {
             if (board == null) board = FindObjectOfType<Board>();
@@ -48,13 +52,16 @@ namespace DungeonEclipse.Core
             csr.sortingOrder = 4;
             crystalGo.AddComponent<Crystal>().Init(board, crystalCell);
 
-            // Guardião (vermelho) — bloqueia a subida até o alvo
-            var guardianGo = new GameObject("Guardian");
-            var gdsr = guardianGo.AddComponent<SpriteRenderer>();
-            gdsr.sprite = PlaceholderSprite.Square;
-            gdsr.color = new Color(0.8f, 0.2f, 0.2f);
-            gdsr.sortingOrder = 4;
-            guardianGo.AddComponent<Guardian>().Init(board, guardianCell);
+            // Guardião (vermelho) — bloqueia a subida até o alvo (só nas salas de combate)
+            if (spawnGuardian)
+            {
+                var guardianGo = new GameObject("Guardian");
+                var gdsr = guardianGo.AddComponent<SpriteRenderer>();
+                gdsr.sprite = PlaceholderSprite.Square;
+                gdsr.color = new Color(0.8f, 0.2f, 0.2f);
+                gdsr.sortingOrder = 4;
+                guardianGo.AddComponent<Guardian>().Init(board, guardianCell);
+            }
 
             // Sala-alvo
             var goalGo = new GameObject("Goal");
@@ -62,7 +69,7 @@ namespace DungeonEclipse.Core
             gsr.sprite = PlaceholderSprite.Square;
             gsr.color = new Color(1f, 0.84f, 0.3f);
             gsr.sortingOrder = 1;
-            goalGo.AddComponent<GoalTrigger>().Init(board, goalCell, player);
+            goalGo.AddComponent<GoalTrigger>().Init(board, goalCell, player, nextScene);
 
             // Câmera + HUD
             if (cameraFollow != null) cameraFollow.SetTarget(kael.transform);
