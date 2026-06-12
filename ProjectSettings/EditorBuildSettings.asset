@@ -8,4 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Andar1.unity
     guid: a840451c1c1d8ff46b5f54a029d6b8bf
+  - enabled: 1
+    path: Assets/Scenes/Andar2.unity
+    guid: c215cbbe6d612c843a5c85ee5ef08fea
   m_configObjects: {}
