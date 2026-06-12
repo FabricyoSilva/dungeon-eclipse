@@ -265,8 +265,11 @@ MonoBehaviour:
   cameraFollow: {fileID: 0}
   startCell: {x: 1, y: 1}
   crystalCell: {x: 4, y: 1}
+  guardianCell: {x: 7, y: 3}
   goalCell: {x: 7, y: 5}
   playerHp: 5
+  spawnGuardian: 0
+  nextScene: Andar2
 --- !u!114 &1319663068
 MonoBehaviour:
   m_ObjectHideFlags: 0
