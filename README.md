@@ -40,12 +40,13 @@ Recursos adicionais previstos: backtracking típico de Metroidvania (áreas anti
 | Andar | Nome | Foco |
 |-------|------|------|
 | 1 | Prisão Abandonada | Tutorial: movimento, exploração e destruição básica |
-| 2 | Minas Escuras | Building: construção de mecanismos |
-| 3 | Jardins Subterrâneos | Captura de salas |
-| 4 | Fortaleza Perdida | Combate avançado contra guardiões |
+| 2 | Sala do Guardião | Combate: guardião corpo-a-corpo obrigatório para passar de fase |
+| 3 | Minas Escuras | Building: construção de mecanismos |
+| 4 | Jardins Subterrâneos | Captura de salas |
+| 5 | Fortaleza Perdida | Combate avançado contra guardiões |
 | Final | Coração Eclipse | Reconstrução do núcleo central e batalha final |
 
-> No escopo do protótipo (Trabalho 04), priorizam-se os **Andares 1 e 2**, um confronto com guardião simples, telas de vitória/derrota e tutorial integrado.
+> No escopo do protótipo (Trabalho 04), priorizam-se os **Andares 1 e 2**: tutorial de movimento/destruição (Andar 1) e um confronto com guardião simples (Andar 2), com telas de vitória/derrota e tutorial integrado. Cada andar é uma cena Unity; ao alcançar a sala-alvo do Andar 1, o jogo avança para o Andar 2.
 
 ---
 
