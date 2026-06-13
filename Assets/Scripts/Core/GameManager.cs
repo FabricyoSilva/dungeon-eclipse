@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using DungeonEclipse.Audio;
+using DungeonEclipse.UI;
 
 namespace DungeonEclipse.Core
 {
@@ -33,6 +35,7 @@ namespace DungeonEclipse.Core
             if (State != GameState.Jogando) return;
             State = GameState.Venceu;
             Messages.Raise("Você Venceu");
+            Sfx.Victory();
             OnVictory?.Invoke();
         }
 
@@ -41,12 +44,14 @@ namespace DungeonEclipse.Core
             if (State != GameState.Jogando) return;
             State = GameState.Perdeu;
             Messages.Raise("Tente Novamente");
+            Sfx.Defeat();
             OnDefeat?.Invoke();
         }
 
         public void Reiniciar()
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            Time.timeScale = 1f;
+            ScreenFader.Ensure().FadeToScene(SceneManager.GetActiveScene().name);
         }
     }
 }
