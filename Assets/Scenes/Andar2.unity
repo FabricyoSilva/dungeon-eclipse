@@ -161,7 +161,7 @@ MonoBehaviour:
   crystalCell: {x: 4, y: 1}
   guardianCell: {x: 7, y: 3}
   goalCell: {x: 7, y: 5}
-  playerHp: 5
+  playerHp: 6
   spawnGuardian: 1
   nextScene: 
 --- !u!114 &189555522
