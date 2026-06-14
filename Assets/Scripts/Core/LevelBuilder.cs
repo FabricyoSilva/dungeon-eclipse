@@ -3,6 +3,7 @@ using DungeonEclipse.Grid;
 using DungeonEclipse.Player;
 using DungeonEclipse.Interactables;
 using DungeonEclipse.Building;
+using DungeonEclipse.Capture;
 using DungeonEclipse.CameraRig;
 using DungeonEclipse.Effects;
 using DungeonEclipse.UI;
@@ -36,6 +37,9 @@ namespace DungeonEclipse.Core
         [SerializeField] private Vector2Int[] buildMaterialCells = new Vector2Int[0];
         [SerializeField] private Vector2Int[] buildBridgeCells = new Vector2Int[0];
         [SerializeField] private int requiredMaterials = 0;
+
+        [Header("Captura (Andar 4 — Jardins Subterrâneos)")]
+        [SerializeField] private Vector2Int[] captureCells = new Vector2Int[0];
 
         private void Start()
         {
@@ -113,13 +117,37 @@ namespace DungeonEclipse.Core
                 siteGo.AddComponent<BuildSite>().Init(board, buildBridgeCells, inventory, requiredMaterials);
             }
 
-            // Sala-alvo
+            // Captura (Andar 4): núcleos corrompidos que trancam a sala-alvo
+            bool capturing = captureCells != null && captureCells.Length > 0;
+            CaptureObjective objective = null;
+            if (capturing)
+            {
+                objective = new CaptureObjective(captureCells.Length);
+                foreach (var cc in captureCells)
+                {
+                    var nGo = new GameObject("CaptureNode");
+                    var nsr = nGo.AddComponent<SpriteRenderer>();
+                    nsr.sprite = PlaceholderSprite.Square;
+                    nsr.sortingOrder = 4;
+                    nGo.AddComponent<CaptureNode>().Init(board, cc, objective);
+                }
+                objective.OnChanged += (captured, total) =>
+                {
+                    if (captured >= total)
+                        Messages.Raise("Equilíbrio restaurado — a sala dourada se abriu!");
+                    else
+                        Messages.Raise($"Núcleos restaurados: {captured}/{total}");
+                };
+            }
+
+            // Sala-alvo (trancada até o objetivo de captura, se houver)
             var goalGo = new GameObject("Goal");
             var gsr = goalGo.AddComponent<SpriteRenderer>();
             gsr.sprite = PlaceholderSprite.Square;
             gsr.color = new Color(1f, 0.84f, 0.3f);
             gsr.sortingOrder = 1;
-            goalGo.AddComponent<GoalTrigger>().Init(board, goalCell, player, nextScene);
+            System.Func<bool> goalUnlocked = capturing ? () => objective.Complete : (System.Func<bool>)null;
+            goalGo.AddComponent<GoalTrigger>().Init(board, goalCell, player, nextScene, goalUnlocked);
             goalGo.AddComponent<GoalPulse>();
 
             // Câmera + HUD
@@ -142,13 +170,18 @@ namespace DungeonEclipse.Core
                 hints.AddHint(buildBridgeCells[0], 1,
                     "Abismo à frente. Junte as engrenagens e aperte Espaço para erguer a ponte.");
             }
+            if (capturing)
+                hints.AddHint(captureCells[0], 2,
+                    "Núcleo corrompido. Fique em cima e aperte Espaço para restaurá-lo.");
             hints.AddHint(goalCell, 1, "Sala restaurada à frente — entre nela.");
 
             // Painel de introdução (texto derivado da fase)
             if (hud != null)
             {
                 string intro;
-                if (building)
+                if (capturing)
+                    intro = "Jardins Subterrâneos\n\nA sala está corrompida. Restaure todos os Núcleos de Equilíbrio (fique em cima e aperte Espaço) para abrir a sala dourada.\n\nPressione Enter ou clique para começar.";
+                else if (building)
                     intro = "Minas Escuras\n\nO caminho está partido por um abismo. Colete as engrenagens antigas (Espaço) e construa a ponte para atravessar até a sala dourada.\n\nPressione Enter ou clique para começar.";
                 else if (spawnGuardian)
                     intro = "Sala do Guardião\n\nDerrote o guardião: aproxime-se e ataque com Espaço. Mas cuidado — ficar parado ao lado dele drena sua vida!\n\nPressione Enter ou clique para começar.";
@@ -157,9 +190,11 @@ namespace DungeonEclipse.Core
                 hud.ShowIntro(intro);
             }
 
-            Messages.Raise(building
-                ? "Use WASD para mover. Espaço coleta engrenagens e constrói."
-                : "Use WASD para mover. Espaço destrói cristais.");
+            string rodape;
+            if (capturing) rodape = "Use WASD para mover. Espaço restaura os núcleos.";
+            else if (building) rodape = "Use WASD para mover. Espaço coleta engrenagens e constrói.";
+            else rodape = "Use WASD para mover. Espaço destrói cristais.";
+            Messages.Raise(rodape);
         }
     }
 }

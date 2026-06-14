@@ -164,15 +164,15 @@ MonoBehaviour:
   playerHp: 6
   spawnCrystal: 0
   spawnGuardian: 0
-  nextScene: Andar4
-  buildMaterialCells:
-  - {x: 1, y: 3}
+  nextScene:
+  buildMaterialCells: []
+  buildBridgeCells: []
+  requiredMaterials: 0
+  captureCells:
+  - {x: 1, y: 5}
+  - {x: 7, y: 1}
   - {x: 3, y: 3}
-  - {x: 3, y: 1}
-  buildBridgeCells:
-  - {x: 4, y: 1}
-  - {x: 5, y: 1}
-  requiredMaterials: 3
+  - {x: 5, y: 3}
 --- !u!114 &189555522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,11 +214,11 @@ MonoBehaviour:
   wallColor: {r: 0.18, g: 0.2, b: 0.26, a: 1}
   layout:
   - '#########'
-  - '#######.#'
-  - '#######.#'
-  - '#...#...#'
+  - '#.......#'
   - '#.#.#.#.#'
-  - '#...##..#'
+  - '#.......#'
+  - '#.#.#.#.#'
+  - '#.......#'
   - '#########'
 --- !u!4 &189555525
 Transform:
