@@ -3,12 +3,16 @@ using DungeonEclipse.Grid;
 using DungeonEclipse.Combat;
 using DungeonEclipse.Core;
 using DungeonEclipse.Interactables;
+using DungeonEclipse.CameraRig;
+using DungeonEclipse.Effects;
+using DungeonEclipse.Audio;
 
 namespace DungeonEclipse.Player
 {
     /// <summary>
     /// Controla o Kael: lê input de movimento (passo a passo na grade) e a ação
-    /// de destruir um cristal ou atacar um guardião numa célula adjacente.
+    /// de destruir um cristal ou atacar um guardião numa célula adjacente, com
+    /// feedback sonoro e visual.
     /// </summary>
     [RequireComponent(typeof(GridMover))]
     public class PlayerController : MonoBehaviour
@@ -17,6 +21,8 @@ namespace DungeonEclipse.Player
 
         public Health Health { get; private set; }
         public GridMover Mover { get; private set; }
+
+        private CameraFollow _camera;
 
         private static readonly Vector2Int[] Directions =
             { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
@@ -29,6 +35,8 @@ namespace DungeonEclipse.Player
             Health.OnDied += HandleDeath;
         }
 
+        public void SetCamera(CameraFollow camera) => _camera = camera;
+
         private void HandleDeath()
         {
             if (GameManager.Instance != null) GameManager.Instance.Derrota();
@@ -36,6 +44,7 @@ namespace DungeonEclipse.Player
 
         private void Update()
         {
+            if (Time.timeScale == 0f) return; // pausado (ex.: intro aberto)
             if (GameManager.Instance != null &&
                 GameManager.Instance.State != GameState.Jogando) return;
             HandleMove();
@@ -50,8 +59,8 @@ namespace DungeonEclipse.Player
             else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) dir = Vector2Int.left;
             else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) dir = Vector2Int.right;
 
-            if (dir != Vector2Int.zero)
-                Mover.TryMove(dir);
+            if (dir != Vector2Int.zero && Mover.TryMove(dir))
+                Sfx.Move();
         }
 
         private void HandleAction()
@@ -64,7 +73,11 @@ namespace DungeonEclipse.Player
                 var crystal = FindCrystalAt(cell);
                 if (crystal != null)
                 {
+                    Vector3 pos = crystal.transform.position;
                     crystal.DestroyCrystal();
+                    HitEffect.Burst(pos, new Color(0.6f, 0.3f, 0.9f));
+                    Sfx.Destroy();
+                    if (_camera != null) _camera.Shake(0.08f, 0.08f);
                     Messages.Raise("Cristal Destruído");
                     return;
                 }
@@ -72,7 +85,11 @@ namespace DungeonEclipse.Player
                 var guardian = FindGuardianAt(cell);
                 if (guardian != null)
                 {
+                    Vector3 pos = guardian.transform.position;
                     bool defeated = guardian.Engage(Health, attackDamage);
+                    HitEffect.Burst(pos, new Color(1f, 0.4f, 0.3f));
+                    Sfx.Attack();
+                    if (_camera != null) _camera.Shake(0.12f, 0.12f);
                     Messages.Raise(defeated ? "Guardião Derrotado" : "Atingiu o Guardião");
                     return;
                 }
