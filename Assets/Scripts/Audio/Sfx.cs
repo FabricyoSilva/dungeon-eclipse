@@ -30,6 +30,7 @@ namespace DungeonEclipse.Audio
         public static void Move()    => Play(220f, 0.06f, 0.20f);
         public static void Destroy() => Play(440f, 0.18f, 0.40f, sweep: -220f);
         public static void Attack()  => Play(330f, 0.10f, 0.40f, square: true);
+        public static void Build()   => Play(180f, 0.16f, 0.40f, sweep: 140f, square: true);
         public static void Hurt()    => Play(160f, 0.20f, 0.50f, sweep: -60f);
         public static void Victory() => Play(523f, 0.40f, 0.40f, sweep: 264f);
         public static void Defeat()  => Play(196f, 0.50f, 0.45f, sweep: -90f);

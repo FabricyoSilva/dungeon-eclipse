@@ -162,8 +162,17 @@ MonoBehaviour:
   guardianCell: {x: 7, y: 3}
   goalCell: {x: 7, y: 5}
   playerHp: 6
-  spawnGuardian: 1
-  nextScene: Andar3
+  spawnCrystal: 0
+  spawnGuardian: 0
+  nextScene:
+  buildMaterialCells:
+  - {x: 1, y: 3}
+  - {x: 3, y: 3}
+  - {x: 3, y: 1}
+  buildBridgeCells:
+  - {x: 4, y: 1}
+  - {x: 5, y: 1}
+  requiredMaterials: 3
 --- !u!114 &189555522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -207,9 +216,9 @@ MonoBehaviour:
   - '#########'
   - '#######.#'
   - '#######.#'
-  - '#######.#'
-  - '#######.#'
-  - '#.......#'
+  - '#...#...#'
+  - '#.#.#.#.#'
+  - '#...##..#'
   - '#########'
 --- !u!4 &189555525
 Transform:

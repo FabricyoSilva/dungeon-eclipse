@@ -66,6 +66,10 @@ namespace DungeonEclipse.Player
         private void HandleAction()
         {
             if (!Input.GetKeyDown(KeyCode.Space) && !Input.GetKeyDown(KeyCode.E)) return;
+
+            // engrenagem na própria célula (Kael em cima dela)
+            if (TryCollectMaterialAt(Mover.Cell)) return;
+
             foreach (var d in Directions)
             {
                 var cell = Mover.Cell + d;
@@ -93,7 +97,39 @@ namespace DungeonEclipse.Player
                     Messages.Raise(defeated ? "Guardião Derrotado" : "Atingiu o Guardião");
                     return;
                 }
+
+                if (TryCollectMaterialAt(cell)) return;
+
+                var site = FindBuildSiteAt(cell);
+                if (site != null)
+                {
+                    if (site.TryBuild())
+                    {
+                        HitEffect.Burst(site.transform.position, new Color(0.6f, 0.45f, 0.25f));
+                        Sfx.Build();
+                        if (_camera != null) _camera.Shake(0.1f, 0.1f);
+                        Messages.Raise("Ponte Construída");
+                    }
+                    else
+                    {
+                        Sfx.Hurt();
+                        Messages.Raise("Faltam engrenagens para construir.");
+                    }
+                    return;
+                }
             }
+        }
+
+        private bool TryCollectMaterialAt(Vector2Int cell)
+        {
+            var material = FindBuildMaterialAt(cell);
+            if (material == null) return false;
+            Vector3 pos = material.transform.position;
+            int total = material.Collect();
+            HitEffect.Burst(pos, new Color(0.85f, 0.7f, 0.3f));
+            Sfx.Move();
+            Messages.Raise($"Engrenagem coletada ({total})");
+            return true;
         }
 
         private Crystal FindCrystalAt(Vector2Int cell)
@@ -107,6 +143,20 @@ namespace DungeonEclipse.Player
         {
             foreach (var g in FindObjectsOfType<Guardian>())
                 if (!g.Defeated && g.Cell == cell) return g;
+            return null;
+        }
+
+        private BuildMaterial FindBuildMaterialAt(Vector2Int cell)
+        {
+            foreach (var m in FindObjectsOfType<BuildMaterial>())
+                if (!m.Collected && m.Cell == cell) return m;
+            return null;
+        }
+
+        private BuildSite FindBuildSiteAt(Vector2Int cell)
+        {
+            foreach (var s in FindObjectsOfType<BuildSite>())
+                if (s.Occupies(cell)) return s;
             return null;
         }
     }
