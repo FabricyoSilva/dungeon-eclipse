@@ -24,16 +24,26 @@ namespace DungeonEclipse.Interactables
         private Board _board;
         private PlayerController _player;
         private float _proxTimer;
+        private float _baseScale = 0.75f;
 
         public Vector2Int Cell { get; private set; }
         public Health Health { get; private set; }
         public bool Defeated { get; private set; }
 
-        public void Init(Board board, Vector2Int cell, PlayerController player)
+        /// <summary>
+        /// Inicializa o guardião. overrideHp/overrideCounter (&gt; 0) substituem os
+        /// valores serializados — usados pelo chefe final. baseScale ajusta o
+        /// tamanho (chefe maior).
+        /// </summary>
+        public void Init(Board board, Vector2Int cell, PlayerController player,
+            int overrideHp = -1, int overrideCounter = -1, float baseScale = 0.75f)
         {
             _board = board;
             _player = player;
             Cell = cell;
+            if (overrideHp > 0) maxHp = overrideHp;
+            if (overrideCounter >= 0) counterDamage = overrideCounter;
+            _baseScale = baseScale;
             Health = new Health(maxHp);
             transform.position = board.Grid.CellToWorld(cell.x, cell.y);
             _board.Grid.SetWalkable(cell.x, cell.y, false); // bloqueia
@@ -62,8 +72,8 @@ namespace DungeonEclipse.Interactables
 
         private void Update()
         {
-            // leve pulsar placeholder
-            float s = (0.75f + 0.07f * Mathf.Sin(Time.time * 4f));
+            // leve pulsar placeholder (escala-base maior para o chefe)
+            float s = (_baseScale + 0.07f * Mathf.Sin(Time.time * 4f));
             transform.localScale = new Vector3(s, s, 1f);
 
             if (Defeated || _player == null) return;

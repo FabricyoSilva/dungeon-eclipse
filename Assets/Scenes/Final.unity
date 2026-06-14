@@ -160,18 +160,21 @@ MonoBehaviour:
   startCell: {x: 1, y: 1}
   crystalCell: {x: 4, y: 1}
   guardianCell: {x: 7, y: 3}
-  goalCell: {x: 7, y: 5}
-  playerHp: 8
+  goalCell: {x: 4, y: 5}
+  playerHp: 10
   spawnCrystal: 0
   spawnGuardian: 0
-  nextScene: Final
+  nextScene:
   buildMaterialCells: []
   buildBridgeCells: []
   requiredMaterials: 0
-  captureCells: []
-  guardianCells:
-  - {x: 5, y: 1}
-  - {x: 7, y: 3}
+  captureCells:
+  - {x: 2, y: 5}
+  - {x: 6, y: 5}
+  guardianCells: []
+  bossHp: 6
+  bossCell: {x: 4, y: 3}
+  bossCounterDamage: 1
 --- !u!114 &189555522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -213,10 +216,10 @@ MonoBehaviour:
   wallColor: {r: 0.18, g: 0.2, b: 0.26, a: 1}
   layout:
   - '#########'
-  - '#######.#'
-  - '#######.#'
-  - '#######.#'
-  - '#######.#'
+  - '#.......#'
+  - '#.......#'
+  - '####.####'
+  - '#.......#'
   - '#.......#'
   - '#########'
 --- !u!4 &189555525
