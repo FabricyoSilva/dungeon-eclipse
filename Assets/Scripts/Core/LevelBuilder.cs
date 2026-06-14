@@ -2,6 +2,7 @@ using UnityEngine;
 using DungeonEclipse.Grid;
 using DungeonEclipse.Player;
 using DungeonEclipse.Interactables;
+using DungeonEclipse.Building;
 using DungeonEclipse.CameraRig;
 using DungeonEclipse.Effects;
 using DungeonEclipse.UI;
@@ -27,8 +28,14 @@ namespace DungeonEclipse.Core
         [SerializeField] private int playerHp = 6;
 
         [Header("Progressão")]
+        [SerializeField] private bool spawnCrystal = true;
         [SerializeField] private bool spawnGuardian = false;
         [SerializeField] private string nextScene = ""; // vazio = sala final (vitória)
+
+        [Header("Building (Andar 3 — Minas Escuras)")]
+        [SerializeField] private Vector2Int[] buildMaterialCells = new Vector2Int[0];
+        [SerializeField] private Vector2Int[] buildBridgeCells = new Vector2Int[0];
+        [SerializeField] private int requiredMaterials = 0;
 
         private void Start()
         {
@@ -57,12 +64,15 @@ namespace DungeonEclipse.Core
             kaelHurt.Bind(player.Health, cameraFollow);
 
             // Cristal
-            var crystalGo = new GameObject("Crystal");
-            var csr = crystalGo.AddComponent<SpriteRenderer>();
-            csr.sprite = PlaceholderSprite.Square;
-            csr.color = new Color(0.5f, 0.2f, 0.7f);
-            csr.sortingOrder = 4;
-            crystalGo.AddComponent<Crystal>().Init(board, crystalCell);
+            if (spawnCrystal)
+            {
+                var crystalGo = new GameObject("Crystal");
+                var csr = crystalGo.AddComponent<SpriteRenderer>();
+                csr.sprite = PlaceholderSprite.Square;
+                csr.color = new Color(0.5f, 0.2f, 0.7f);
+                csr.sortingOrder = 4;
+                crystalGo.AddComponent<Crystal>().Init(board, crystalCell);
+            }
 
             // Guardião (vermelho) — bloqueia a subida até o alvo (só nas salas de combate)
             if (spawnGuardian)
@@ -82,6 +92,27 @@ namespace DungeonEclipse.Core
                 barGo.AddComponent<WorldHealthBar>().Bind(guardian.Health, guardianGo.transform);
             }
 
+            // Building (Andar 3): engrenagens coletáveis + ponte sobre o abismo
+            bool building = buildBridgeCells != null && buildBridgeCells.Length > 0;
+            if (building)
+            {
+                var inventory = new BuildInventory();
+
+                foreach (var mc in buildMaterialCells)
+                {
+                    var mGo = new GameObject("BuildMaterial");
+                    var msr = mGo.AddComponent<SpriteRenderer>();
+                    msr.sprite = PlaceholderSprite.Square;
+                    msr.color = new Color(0.85f, 0.7f, 0.3f); // engrenagem dourada
+                    msr.sortingOrder = 4;
+                    mGo.transform.localScale = Vector3.one * 0.5f;
+                    mGo.AddComponent<BuildMaterial>().Init(board, mc, inventory);
+                }
+
+                var siteGo = new GameObject("BuildSite");
+                siteGo.AddComponent<BuildSite>().Init(board, buildBridgeCells, inventory, requiredMaterials);
+            }
+
             // Sala-alvo
             var goalGo = new GameObject("Goal");
             var gsr = goalGo.AddComponent<SpriteRenderer>();
@@ -98,22 +129,37 @@ namespace DungeonEclipse.Core
             // Dicas contextuais
             var hints = gameObject.AddComponent<TutorialHints>();
             hints.Init(player);
-            hints.AddHint(crystalCell, 2, "Aperte Espaço perto do cristal para destruí-lo.");
+            if (spawnCrystal)
+                hints.AddHint(crystalCell, 2, "Aperte Espaço perto do cristal para destruí-lo.");
             if (spawnGuardian)
                 hints.AddHint(guardianCell, 2,
                     "Guardião à frente! Ataque com Espaço e não fique parado ao lado dele.");
+            if (building)
+            {
+                if (buildMaterialCells.Length > 0)
+                    hints.AddHint(buildMaterialCells[0], 2,
+                        "Engrenagem! Aperte Espaço ao lado para coletar material de construção.");
+                hints.AddHint(buildBridgeCells[0], 1,
+                    "Abismo à frente. Junte as engrenagens e aperte Espaço para erguer a ponte.");
+            }
             hints.AddHint(goalCell, 1, "Sala restaurada à frente — entre nela.");
 
             // Painel de introdução (texto derivado da fase)
             if (hud != null)
             {
-                string intro = spawnGuardian
-                    ? "Sala do Guardião\n\nDerrote o guardião: aproxime-se e ataque com Espaço. Mas cuidado — ficar parado ao lado dele drena sua vida!\n\nPressione Enter ou clique para começar."
-                    : "Prisão Abandonada\n\nUse WASD para mover. Aperte Espaço perto do cristal para destruí-lo e alcance a sala dourada.\n\nPressione Enter ou clique para começar.";
+                string intro;
+                if (building)
+                    intro = "Minas Escuras\n\nO caminho está partido por um abismo. Colete as engrenagens antigas (Espaço) e construa a ponte para atravessar até a sala dourada.\n\nPressione Enter ou clique para começar.";
+                else if (spawnGuardian)
+                    intro = "Sala do Guardião\n\nDerrote o guardião: aproxime-se e ataque com Espaço. Mas cuidado — ficar parado ao lado dele drena sua vida!\n\nPressione Enter ou clique para começar.";
+                else
+                    intro = "Prisão Abandonada\n\nUse WASD para mover. Aperte Espaço perto do cristal para destruí-lo e alcance a sala dourada.\n\nPressione Enter ou clique para começar.";
                 hud.ShowIntro(intro);
             }
 
-            Messages.Raise("Use WASD para mover. Espaço destrói cristais.");
+            Messages.Raise(building
+                ? "Use WASD para mover. Espaço coleta engrenagens e constrói."
+                : "Use WASD para mover. Espaço destrói cristais.");
         }
     }
 }
