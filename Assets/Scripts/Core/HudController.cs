@@ -15,6 +15,9 @@ namespace DungeonEclipse.Core
         private Text _message;
         private GameObject _victoryPanel;
         private GameObject _defeatPanel;
+        private GameObject _introPanel;
+        private Text _introText;
+        private bool _introOpen;
         private Health _health;
         private float _messageTimer;
 
@@ -53,8 +56,33 @@ namespace DungeonEclipse.Core
             UpdateBar(_health.Current, _health.Max);
         }
 
+        /// <summary>Mostra o painel de introdução e pausa o jogo até ser dispensado.</summary>
+        public void ShowIntro(string text)
+        {
+            _introText.text = text;
+            _introPanel.SetActive(true);
+            _introOpen = true;
+            Time.timeScale = 0f;
+        }
+
+        private void HideIntro()
+        {
+            _introOpen = false;
+            _introPanel.SetActive(false);
+            Time.timeScale = 1f;
+        }
+
         private void Update()
         {
+            if (_introOpen)
+            {
+                // Dispensa com Enter ou clique (evita colidir com Espaço/ação de jogo)
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)
+                    || Input.GetMouseButtonDown(0))
+                    HideIntro();
+                return;
+            }
+
             if (_messageTimer > 0f)
             {
                 _messageTimer -= Time.deltaTime;
@@ -178,6 +206,26 @@ namespace DungeonEclipse.Core
             dbt.offsetMin = Vector2.zero; dbt.offsetMax = Vector2.zero;
 
             _defeatPanel.SetActive(false);
+
+            // Painel de introdução
+            _introPanel = new GameObject("IntroPanel");
+            _introPanel.transform.SetParent(canvasGo.transform, false);
+            var ipImg = _introPanel.AddComponent<Image>();
+            ipImg.color = new Color(0f, 0f, 0.05f, 0.85f);
+            var it = ipImg.rectTransform;
+            it.anchorMin = Vector2.zero; it.anchorMax = Vector2.one;
+            it.offsetMin = Vector2.zero; it.offsetMax = Vector2.zero;
+
+            _introText = CreateText("IntroText", _introPanel.transform, "", 30, TextAnchor.MiddleCenter);
+            _introText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var itt = _introText.rectTransform;
+            itt.anchorMin = new Vector2(0.5f, 0.5f);
+            itt.anchorMax = new Vector2(0.5f, 0.5f);
+            itt.pivot = new Vector2(0.5f, 0.5f);
+            itt.sizeDelta = new Vector2(900, 400);
+            itt.anchoredPosition = Vector2.zero;
+
+            _introPanel.SetActive(false);
         }
 
         private static void EnsureEventSystem()

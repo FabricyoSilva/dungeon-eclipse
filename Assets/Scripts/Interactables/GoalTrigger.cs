@@ -1,14 +1,14 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using DungeonEclipse.Grid;
 using DungeonEclipse.Player;
 using DungeonEclipse.Core;
+using DungeonEclipse.UI;
 
 namespace DungeonEclipse.Interactables
 {
     /// <summary>
-    /// Célula-alvo: ao Kael entrar nela, avança para a próxima sala (se houver
-    /// uma cena seguinte configurada) ou dispara a vitória (sala final).
+    /// Célula-alvo: ao Kael entrar nela, avança para a próxima sala (com fade) se
+    /// houver uma cena seguinte configurada, ou dispara a vitória (sala final).
     /// </summary>
     public class GoalTrigger : MonoBehaviour
     {
@@ -35,7 +35,7 @@ namespace DungeonEclipse.Interactables
                 if (!string.IsNullOrEmpty(_nextScene))
                 {
                     Messages.Raise("Fase Concluída");
-                    SceneManager.LoadScene(_nextScene);
+                    ScreenFader.Ensure().FadeToScene(_nextScene);
                 }
                 else if (GameManager.Instance != null)
                 {
