@@ -67,8 +67,9 @@ namespace DungeonEclipse.Player
         {
             if (!Input.GetKeyDown(KeyCode.Space) && !Input.GetKeyDown(KeyCode.E)) return;
 
-            // engrenagem na própria célula (Kael em cima dela)
+            // ação na própria célula (Kael em cima): engrenagem ou núcleo
             if (TryCollectMaterialAt(Mover.Cell)) return;
+            if (TryCaptureNodeAt(Mover.Cell)) return;
 
             foreach (var d in Directions)
             {
@@ -99,6 +100,7 @@ namespace DungeonEclipse.Player
                 }
 
                 if (TryCollectMaterialAt(cell)) return;
+                if (TryCaptureNodeAt(cell)) return;
 
                 var site = FindBuildSiteAt(cell);
                 if (site != null)
@@ -132,6 +134,20 @@ namespace DungeonEclipse.Player
             return true;
         }
 
+        private bool TryCaptureNodeAt(Vector2Int cell)
+        {
+            var node = FindCaptureNodeAt(cell);
+            if (node == null) return false;
+            if (node.Capture())
+            {
+                HitEffect.Burst(node.transform.position, new Color(0.4f, 0.9f, 0.6f));
+                Sfx.Capture();
+                if (_camera != null) _camera.Shake(0.06f, 0.06f);
+                Messages.Raise("Núcleo restaurado");
+            }
+            return true;
+        }
+
         private Crystal FindCrystalAt(Vector2Int cell)
         {
             foreach (var c in FindObjectsOfType<Crystal>())
@@ -157,6 +173,13 @@ namespace DungeonEclipse.Player
         {
             foreach (var s in FindObjectsOfType<BuildSite>())
                 if (s.Occupies(cell)) return s;
+            return null;
+        }
+
+        private CaptureNode FindCaptureNodeAt(Vector2Int cell)
+        {
+            foreach (var n in FindObjectsOfType<CaptureNode>())
+                if (!n.Captured && n.Cell == cell) return n;
             return null;
         }
     }
