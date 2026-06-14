@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using DungeonEclipse.Grid;
 using DungeonEclipse.Player;
@@ -41,6 +42,9 @@ namespace DungeonEclipse.Core
         [Header("Captura (Andar 4 — Jardins Subterrâneos)")]
         [SerializeField] private Vector2Int[] captureCells = new Vector2Int[0];
 
+        [Header("Combate avançado (Andar 5 — Fortaleza Perdida)")]
+        [SerializeField] private Vector2Int[] guardianCells = new Vector2Int[0];
+
         private void Start()
         {
             Time.timeScale = 1f;
@@ -78,23 +82,12 @@ namespace DungeonEclipse.Core
                 crystalGo.AddComponent<Crystal>().Init(board, crystalCell);
             }
 
-            // Guardião (vermelho) — bloqueia a subida até o alvo (só nas salas de combate)
-            if (spawnGuardian)
-            {
-                var guardianGo = new GameObject("Guardian");
-                var gdsr = guardianGo.AddComponent<SpriteRenderer>();
-                gdsr.sprite = PlaceholderSprite.Square;
-                gdsr.color = new Color(0.8f, 0.2f, 0.2f);
-                gdsr.sortingOrder = 4;
-                var guardian = guardianGo.AddComponent<Guardian>();
-                guardian.Init(board, guardianCell, player);
-
-                var gFlash = guardianGo.AddComponent<DamageFlash>();
-                gFlash.Bind(guardian.Health);
-
-                var barGo = new GameObject("GuardianHpBar");
-                barGo.AddComponent<WorldHealthBar>().Bind(guardian.Health, guardianGo.transform);
-            }
+            // Guardião(ões) vermelhos — bloqueiam o caminho até o alvo.
+            // Andar 2: um guardião (spawnGuardian). Andar 5: vários (guardianCells).
+            var guardians = new List<Guardian>();
+            if (spawnGuardian) guardians.Add(SpawnGuardianAt(guardianCell, player));
+            foreach (var gc in guardianCells) guardians.Add(SpawnGuardianAt(gc, player));
+            bool advancedCombat = guardianCells != null && guardianCells.Length > 0;
 
             // Building (Andar 3): engrenagens coletáveis + ponte sobre o abismo
             bool building = buildBridgeCells != null && buildBridgeCells.Length > 0;
@@ -146,7 +139,9 @@ namespace DungeonEclipse.Core
             gsr.sprite = PlaceholderSprite.Square;
             gsr.color = new Color(1f, 0.84f, 0.3f);
             gsr.sortingOrder = 1;
-            System.Func<bool> goalUnlocked = capturing ? () => objective.Complete : (System.Func<bool>)null;
+            System.Func<bool> goalUnlocked = null;
+            if (capturing) goalUnlocked = () => objective.Complete;
+            else if (advancedCombat) goalUnlocked = () => AllDefeated(guardians);
             goalGo.AddComponent<GoalTrigger>().Init(board, goalCell, player, nextScene, goalUnlocked);
             goalGo.AddComponent<GoalPulse>();
 
@@ -162,6 +157,9 @@ namespace DungeonEclipse.Core
             if (spawnGuardian)
                 hints.AddHint(guardianCell, 2,
                     "Guardião à frente! Ataque com Espaço e não fique parado ao lado dele.");
+            if (advancedCombat)
+                hints.AddHint(guardianCells[0], 2,
+                    "Vários guardiões guardam a fortaleza! Derrote todos para abrir a saída.");
             if (building)
             {
                 if (buildMaterialCells.Length > 0)
@@ -183,6 +181,8 @@ namespace DungeonEclipse.Core
                     intro = "Jardins Subterrâneos\n\nA sala está corrompida. Restaure todos os Núcleos de Equilíbrio (fique em cima e aperte Espaço) para abrir a sala dourada.\n\nPressione Enter ou clique para começar.";
                 else if (building)
                     intro = "Minas Escuras\n\nO caminho está partido por um abismo. Colete as engrenagens antigas (Espaço) e construa a ponte para atravessar até a sala dourada.\n\nPressione Enter ou clique para começar.";
+                else if (advancedCombat)
+                    intro = "Fortaleza Perdida\n\nVários guardiões corrompidos bloqueiam o caminho. Ataque com Espaço, avance derrotando um a um e não fique parado ao lado deles. A saída só abre quando todos caírem.\n\nPressione Enter ou clique para começar.";
                 else if (spawnGuardian)
                     intro = "Sala do Guardião\n\nDerrote o guardião: aproxime-se e ataque com Espaço. Mas cuidado — ficar parado ao lado dele drena sua vida!\n\nPressione Enter ou clique para começar.";
                 else
@@ -193,8 +193,35 @@ namespace DungeonEclipse.Core
             string rodape;
             if (capturing) rodape = "Use WASD para mover. Espaço restaura os núcleos.";
             else if (building) rodape = "Use WASD para mover. Espaço coleta engrenagens e constrói.";
+            else if (spawnGuardian || advancedCombat) rodape = "Use WASD para mover. Espaço ataca os guardiões.";
             else rodape = "Use WASD para mover. Espaço destrói cristais.";
             Messages.Raise(rodape);
+        }
+
+        private Guardian SpawnGuardianAt(Vector2Int cell, PlayerController player)
+        {
+            var guardianGo = new GameObject("Guardian");
+            var gdsr = guardianGo.AddComponent<SpriteRenderer>();
+            gdsr.sprite = PlaceholderSprite.Square;
+            gdsr.color = new Color(0.8f, 0.2f, 0.2f);
+            gdsr.sortingOrder = 4;
+            var guardian = guardianGo.AddComponent<Guardian>();
+            guardian.Init(board, cell, player);
+
+            var gFlash = guardianGo.AddComponent<DamageFlash>();
+            gFlash.Bind(guardian.Health);
+
+            var barGo = new GameObject("GuardianHpBar");
+            barGo.AddComponent<WorldHealthBar>().Bind(guardian.Health, guardianGo.transform);
+            return guardian;
+        }
+
+        // True quando todos os guardiões foram derrotados (referência destruída = derrotado).
+        private static bool AllDefeated(List<Guardian> guardians)
+        {
+            foreach (var g in guardians)
+                if (g != null && !g.Defeated) return false;
+            return true;
         }
     }
 }

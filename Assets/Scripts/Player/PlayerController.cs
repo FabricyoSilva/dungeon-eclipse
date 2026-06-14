@@ -23,6 +23,7 @@ namespace DungeonEclipse.Player
         public GridMover Mover { get; private set; }
 
         private CameraFollow _camera;
+        private bool _actionBuffered; // Espaço/E pressionado, aguardando o passo terminar
 
         private static readonly Vector2Int[] Directions =
             { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
@@ -47,8 +48,15 @@ namespace DungeonEclipse.Player
             if (Time.timeScale == 0f) return; // pausado (ex.: intro aberto)
             if (GameManager.Instance != null &&
                 GameManager.Instance.State != GameState.Jogando) return;
+
+            // Bufferiza o input de ação: um Espaço apertado durante o deslize não
+            // é perdido — fica guardado e dispara assim que o passo termina (com a
+            // célula já atualizada), evitando golpes que "somem" no meio do passo.
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
+                _actionBuffered = true;
+
+            HandleAction(); // executa quando parado, antes de iniciar novo passo
             HandleMove();
-            HandleAction();
         }
 
         private void HandleMove()
@@ -65,7 +73,9 @@ namespace DungeonEclipse.Player
 
         private void HandleAction()
         {
-            if (!Input.GetKeyDown(KeyCode.Space) && !Input.GetKeyDown(KeyCode.E)) return;
+            // espera o passo terminar para agir com a célula final (Mover.Cell estável)
+            if (!_actionBuffered || Mover.IsMoving) return;
+            _actionBuffered = false;
 
             // ação na própria célula (Kael em cima): engrenagem ou núcleo
             if (TryCollectMaterialAt(Mover.Cell)) return;
