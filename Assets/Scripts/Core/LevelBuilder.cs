@@ -45,6 +45,11 @@ namespace DungeonEclipse.Core
         [Header("Combate avançado (Andar 5 — Fortaleza Perdida)")]
         [SerializeField] private Vector2Int[] guardianCells = new Vector2Int[0];
 
+        [Header("Final — Coração Eclipse")]
+        [SerializeField] private int bossHp = 0;          // 0 = sem chefe
+        [SerializeField] private Vector2Int bossCell = new Vector2Int(4, 3);
+        [SerializeField] private int bossCounterDamage = 1;
+
         private void Start()
         {
             Time.timeScale = 1f;
@@ -89,6 +94,11 @@ namespace DungeonEclipse.Core
             foreach (var gc in guardianCells) guardians.Add(SpawnGuardianAt(gc, player));
             bool advancedCombat = guardianCells != null && guardianCells.Length > 0;
 
+            // Chefe final (Coração Eclipse): guardião reforçado que bloqueia o núcleo
+            bool finalBoss = bossHp > 0;
+            if (finalBoss)
+                guardians.Add(SpawnGuardianAt(bossCell, player, bossHp, bossCounterDamage, true));
+
             // Building (Andar 3): engrenagens coletáveis + ponte sobre o abismo
             bool building = buildBridgeCells != null && buildBridgeCells.Length > 0;
             if (building)
@@ -127,7 +137,9 @@ namespace DungeonEclipse.Core
                 objective.OnChanged += (captured, total) =>
                 {
                     if (captured >= total)
-                        Messages.Raise("Equilíbrio restaurado — a sala dourada se abriu!");
+                        Messages.Raise(finalBoss
+                            ? "O Coração Eclipse foi reconstruído!"
+                            : "Equilíbrio restaurado — a sala dourada se abriu!");
                     else
                         Messages.Raise($"Núcleos restaurados: {captured}/{total}");
                 };
@@ -168,6 +180,9 @@ namespace DungeonEclipse.Core
                 hints.AddHint(buildBridgeCells[0], 1,
                     "Abismo à frente. Junte as engrenagens e aperte Espaço para erguer a ponte.");
             }
+            if (finalBoss)
+                hints.AddHint(bossCell, 2,
+                    "O Guardião do Coração bloqueia o núcleo! Derrote-o para alcançar os fragmentos.");
             if (capturing)
                 hints.AddHint(captureCells[0], 2,
                     "Núcleo corrompido. Fique em cima e aperte Espaço para restaurá-lo.");
@@ -177,7 +192,9 @@ namespace DungeonEclipse.Core
             if (hud != null)
             {
                 string intro;
-                if (capturing)
+                if (finalBoss)
+                    intro = "Coração Eclipse\n\nVocê alcançou o núcleo central. Derrote o Guardião do Coração e restaure os fragmentos do núcleo (fique em cima e aperte Espaço) para reconstruí-lo e salvar a dungeon.\n\nPressione Enter ou clique para começar.";
+                else if (capturing)
                     intro = "Jardins Subterrâneos\n\nA sala está corrompida. Restaure todos os Núcleos de Equilíbrio (fique em cima e aperte Espaço) para abrir a sala dourada.\n\nPressione Enter ou clique para começar.";
                 else if (building)
                     intro = "Minas Escuras\n\nO caminho está partido por um abismo. Colete as engrenagens antigas (Espaço) e construa a ponte para atravessar até a sala dourada.\n\nPressione Enter ou clique para começar.";
@@ -191,22 +208,24 @@ namespace DungeonEclipse.Core
             }
 
             string rodape;
-            if (capturing) rodape = "Use WASD para mover. Espaço restaura os núcleos.";
+            if (finalBoss) rodape = "Use WASD para mover. Espaço ataca o chefe e restaura o núcleo.";
+            else if (capturing) rodape = "Use WASD para mover. Espaço restaura os núcleos.";
             else if (building) rodape = "Use WASD para mover. Espaço coleta engrenagens e constrói.";
             else if (spawnGuardian || advancedCombat) rodape = "Use WASD para mover. Espaço ataca os guardiões.";
             else rodape = "Use WASD para mover. Espaço destrói cristais.";
             Messages.Raise(rodape);
         }
 
-        private Guardian SpawnGuardianAt(Vector2Int cell, PlayerController player)
+        private Guardian SpawnGuardianAt(Vector2Int cell, PlayerController player,
+            int hp = -1, int counter = -1, bool boss = false)
         {
-            var guardianGo = new GameObject("Guardian");
+            var guardianGo = new GameObject(boss ? "Boss" : "Guardian");
             var gdsr = guardianGo.AddComponent<SpriteRenderer>();
             gdsr.sprite = PlaceholderSprite.Square;
-            gdsr.color = new Color(0.8f, 0.2f, 0.2f);
+            gdsr.color = boss ? new Color(0.55f, 0.08f, 0.15f) : new Color(0.8f, 0.2f, 0.2f);
             gdsr.sortingOrder = 4;
             var guardian = guardianGo.AddComponent<Guardian>();
-            guardian.Init(board, cell, player);
+            guardian.Init(board, cell, player, hp, counter, boss ? 1.15f : 0.75f);
 
             var gFlash = guardianGo.AddComponent<DamageFlash>();
             gFlash.Bind(guardian.Health);
