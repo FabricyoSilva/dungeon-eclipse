@@ -66,5 +66,8 @@ crashlytics-build.properties
 # AI assistant artifacts
 .claude/
 
+# Deploy tooling (butler/itch.io binaries — baixado por máquina)
+/tools/
+
 # Superpowers specs/plans — design docs, not committed
 /docs/superpowers/
