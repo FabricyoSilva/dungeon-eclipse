@@ -147,12 +147,23 @@ namespace DungeonEclipse.Core
             vt.offsetMin = Vector2.zero; vt.offsetMax = Vector2.zero;
 
             var winText = CreateText("WinText", _victoryPanel.transform,
-                "Você Venceu!", 56, TextAnchor.MiddleCenter);
+                "O Eclipse se Desfez", 52, TextAnchor.MiddleCenter);
             Anchor(winText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), new Vector2(0, 60), new Vector2(800, 100));
+                new Vector2(0.5f, 0.5f), new Vector2(0, 170), new Vector2(900, 90));
             winText.color = new Color(1f, 0.85f, 0.3f);
 
-            var btnGo = new GameObject("RestartButton");
+            var endingText = CreateText("EndingText", _victoryPanel.transform,
+                "Kael ergueu o último fragmento e o Coração Eclipse voltou a pulsar. " +
+                "A luz percorreu os corredores e dissolveu a corrupção que aprisionava a dungeon. " +
+                "O equilíbrio entre luz e escuridão foi restaurado.\n\n" +
+                "Obrigado por jogar Dungeon Eclipse.",
+                26, TextAnchor.UpperCenter);
+            endingText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            endingText.color = new Color(0.9f, 0.9f, 0.95f);
+            Anchor(endingText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(0, 20), new Vector2(820, 260));
+
+            var btnGo = new GameObject("MenuButton");
             btnGo.transform.SetParent(_victoryPanel.transform, false);
             var btnImg = btnGo.AddComponent<Image>();
             btnImg.color = new Color(0.9f, 0.75f, 0.2f);
@@ -160,11 +171,11 @@ namespace DungeonEclipse.Core
             btn.targetGraphic = btnImg;
             btn.onClick.AddListener(() =>
             {
-                if (GameManager.Instance != null) GameManager.Instance.Reiniciar();
+                if (GameManager.Instance != null) GameManager.Instance.VoltarAoMenu();
             });
             Anchor(btnImg.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), new Vector2(0, -50), new Vector2(220, 60));
-            var btnText = CreateText("Text", btnGo.transform, "Reiniciar", 28, TextAnchor.MiddleCenter);
+                new Vector2(0.5f, 0.5f), new Vector2(0, -170), new Vector2(260, 64));
+            var btnText = CreateText("Text", btnGo.transform, "Voltar ao Menu", 28, TextAnchor.MiddleCenter);
             btnText.color = Color.black;
             var bt = btnText.rectTransform;
             bt.anchorMin = Vector2.zero; bt.anchorMax = Vector2.one;

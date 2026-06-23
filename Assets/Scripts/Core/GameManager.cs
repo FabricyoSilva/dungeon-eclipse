@@ -16,6 +16,8 @@ namespace DungeonEclipse.Core
         public static GameManager Instance { get; private set; }
         public GameState State { get; private set; } = GameState.Jogando;
 
+        [SerializeField] private string menuScene = "Menu";
+
         public event System.Action OnVictory;
         public event System.Action OnDefeat;
 
@@ -52,6 +54,12 @@ namespace DungeonEclipse.Core
         {
             Time.timeScale = 1f;
             ScreenFader.Ensure().FadeToScene(SceneManager.GetActiveScene().name);
+        }
+
+        public void VoltarAoMenu()
+        {
+            Time.timeScale = 1f;
+            ScreenFader.Ensure().FadeToScene(menuScene);
         }
     }
 }
